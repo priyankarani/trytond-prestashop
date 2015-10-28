@@ -6,8 +6,8 @@
 
 from trytond.pool import Pool
 from channel import (
-    Channel, PrestashopExportOrdersWizardView, PrestashopConnectionWizardView,
-    PrestashopExportOrdersWizard, PrestashopConnectionWizard
+    Channel, PrestashopConnectionWizardView,
+    PrestashopConnectionWizard
 )
 from country import (
     Country, Subdivision, CountryPrestashop, SubdivisionPrestashop
@@ -23,7 +23,6 @@ def register():
     "Register classes with pool"
     Pool.register(
         Channel,
-        PrestashopExportOrdersWizardView,
         PrestashopConnectionWizardView,
         Country,
         Subdivision,
@@ -45,6 +44,5 @@ def register():
         SiteOrderState,
         module='prestashop', type_='model')
     Pool.register(
-        PrestashopExportOrdersWizard,
         PrestashopConnectionWizard,
         module='prestashop', type_='wizard')

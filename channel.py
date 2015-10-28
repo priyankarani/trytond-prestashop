@@ -17,9 +17,7 @@ from trytond.pyson import Eval
 
 __metaclass__ = PoolMeta
 __all__ = [
-    'Channel', 'PrestashopExportOrdersWizardView',
-    'PrestashopExportOrdersWizard',
-    'PrestashopConnectionWizardView', 'PrestashopConnectionWizard',
+    'Channel', 'PrestashopConnectionWizardView', 'PrestashopConnectionWizard',
 ]
 TIMEZONES = [(None, '')] + [(x, x) for x in pytz.common_timezones]
 
@@ -125,7 +123,6 @@ class Channel:
             'test_prestashop_connection': {},
             'import_prestashop_languages': {},
             'import_prestashop_order_states': {},
-            'export_prestashop_orders_button': {},
         })
 
     def get_prestashop_client(self):
@@ -308,17 +305,9 @@ class Channel:
             ('source', '=', 'prestashop')
         ])
         for channel in channels:
-            channel.export_orders_to_prestashop()
+            channel.export_order_status()
 
-    @classmethod
-    @ModelView.button_action('prestashop.wizard_prestashop_export_orders')
-    def export_prestashop_orders_button(cls, channels):
-        """
-        Dummy button to fire up the wizard for export of orders
-        """
-        pass
-
-    def export_orders_to_prestashop(self):
+    def export_order_status(self):
         """
         Export order status to prestashop current site
         Export only those orders which are modified after the
@@ -328,6 +317,9 @@ class Channel:
         """
         Sale = Pool().get('sale.sale')
         Move = Pool().get('stock.move')
+
+        if self.source != 'prestashop':
+            return super(Channel, self).export_order_status()
 
         if not self.prestashop_order_states:
             self.raise_user_error('order_states_not_imported')
@@ -434,41 +426,3 @@ class PrestashopConnectionWizard(Wizard):
         :param data: Wizard data
         """
         return {}
-
-
-class PrestashopExportOrdersWizardView(ModelView):
-    'Prestashop Export Orders Wizard View'
-    __name__ = 'prestashop.export_orders.wizard.view'
-
-    orders_exported = fields.Integer('Orders Exported', readonly=True)
-
-
-class PrestashopExportOrdersWizard(Wizard):
-    'Prestashop Export Orders Wizard'
-    __name__ = 'prestashop.export_orders.wizard'
-
-    start = StateView(
-        'prestashop.export_orders.wizard.view',
-        'prestashop.prestashop_export_orders_wizard_view_form',
-        [
-            Button('Ok', 'end', 'tryton-ok'),
-        ]
-    )
-
-    def default_start(self, fields):
-        """
-        Export the orders and display a confirmation message to the user
-
-        :param fields: Wizard fields
-        """
-        SaleChannel = Pool().get('sale.channel')
-
-        channel = SaleChannel(Transaction().context['active_id'])
-
-        channel.validate_prestashop_channel()
-
-        default = {
-            'orders_exported': len(channel.export_orders_to_prestashop())
-        }
-
-        return default
