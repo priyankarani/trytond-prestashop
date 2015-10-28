@@ -122,7 +122,6 @@ class Channel:
         cls._buttons.update({
             'test_prestashop_connection': {},
             'import_prestashop_languages': {},
-            'import_prestashop_order_states': {},
         })
 
     def get_prestashop_client(self):
@@ -176,30 +175,26 @@ class Channel:
 
         return new_records
 
-    @classmethod
-    @ModelView.button
-    def import_prestashop_order_states(cls, channels):
+    def import_order_states(self):
         """Import Order States from remote and try to link them to tryton
         order states
 
-        :returns: List of order states created
         """
         SiteOrderState = Pool().get('prestashop.site.order_state')
 
-        if len(channels) != 1:
-            cls.raise_user_error('multiple_channels')
-        channel = channels[0]
+        if self.source != 'prestashop':
+            return super(Channel, self).import_order_states()
 
-        channel.validate_prestashop_channel()
+        self.validate_prestashop_channel()
 
         # Set this channel to context
-        with Transaction().set_context(current_channel=channel.id):
+        with Transaction().set_context(current_channel=self.id):
 
             # If channel languages don't exist, then raise an error
-            if not channel.prestashop_languages:
-                cls.raise_user_error('languages_not_imported')
+            if not self.prestashop_languages:
+                self.raise_user_error('languages_not_imported')
 
-            client = channel.get_prestashop_client()
+            client = self.get_prestashop_client()
             order_states = client.order_states.get_list(display='full')
 
             new_records = []

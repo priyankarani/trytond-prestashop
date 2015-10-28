@@ -328,9 +328,9 @@ class BaseTestCase(unittest.TestCase):
     def setup_channels(self):
         "Setup channels"
         self.SaleChannel.import_prestashop_languages([self.channel])
-        self.SaleChannel.import_prestashop_order_states([self.channel])
+        self.channel.import_order_states()
         self.SaleChannel.import_prestashop_languages([self.alt_channel])
-        self.SaleChannel.import_prestashop_order_states([self.alt_channel])
+        self.alt_channel.import_order_states()
 
 
 class TestPrestashop(BaseTestCase):
@@ -408,7 +408,7 @@ class TestPrestashop(BaseTestCase):
                     len(self.LangPrestashop.get_channel_languages()), 2
                 )
 
-    def test_0030_import_prestashop_order_states(self):
+    def test_0030_import_order_states(self):
         """Test the import of order states
         """
         with Transaction().start(DB_NAME, USER, context=CONTEXT):
@@ -465,15 +465,14 @@ class TestPrestashop(BaseTestCase):
             with Transaction().set_context(ps_test=True):
                 self.assertRaises(
                     UserError,
-                    self.SaleChannel.import_prestashop_order_states,
-                    [self.channel]
+                    self.channel.import_order_states,
                 )
 
                 self.SaleChannel.import_prestashop_languages([self.channel])
 
                 self.assertTrue(len(self.LangPrestashop.search([])) > 0)
 
-                self.SaleChannel.import_prestashop_order_states([self.channel])
+                self.channel.import_order_states()
 
                 self.assertTrue(len(self.PrestashopOrderState.search([])) > 0)
 
@@ -496,13 +495,11 @@ class TestPrestashop(BaseTestCase):
                 # Same behaviour by both channel when no order states are there
                 self.assertRaises(
                     UserError,
-                    self.SaleChannel.import_prestashop_order_states,
-                    [self.channel]
+                    self.channel.import_order_states,
                 )
                 self.assertRaises(
                     UserError,
-                    self.SaleChannel.import_prestashop_order_states,
-                    [self.alt_channel]
+                    self.alt_channel.import_order_states,
                 )
 
                 # Import languages for first channel, the second one should
@@ -525,8 +522,7 @@ class TestPrestashop(BaseTestCase):
                 ])) == 0)
                 self.assertRaises(
                     UserError,
-                    self.SaleChannel.import_prestashop_order_states,
-                    [self.alt_channel]
+                    self.alt_channel.import_order_states,
                 )
 
                 # Languages cannot be imported again for first channel but for
@@ -534,7 +530,7 @@ class TestPrestashop(BaseTestCase):
                 self.SaleChannel.import_prestashop_languages([self.alt_channel])
 
                 # Import order states for first channel only
-                self.SaleChannel.import_prestashop_order_states([self.channel])
+                self.channel.import_order_states()
 
                 self.assertTrue(len(self.PrestashopOrderState.search([
                     ('channel', '=', self.channel.id)
